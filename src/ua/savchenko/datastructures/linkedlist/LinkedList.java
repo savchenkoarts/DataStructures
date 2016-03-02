@@ -20,46 +20,21 @@ public class LinkedList implements List {
         if(index == 0){
             if(size == 0){
                 first = last = node;
-                size++;
-                return;
+            }else{
+                first.setPrev(node);
+                node.setNext(first);
+                first = node;
             }
-            first.setPrev(node);
-            node.setNext(first);
-            first = node;
-            size++;
-            return;
-        }
-
-        if(index == size){
+        }else if(index == size){
             last.setNext(node);
             node.setPrev(last);
             last = node;
-            size++;
-            return;
-        }
-
-        if (index < (size >> 1)) {
-            Node target = first;
-            for (int i = 1; i <= index; i++){
-                target = target.getNext();
-                if(i == index){
-                    node.setPrev(target.getPrev());
-                    node.setNext(target);
-                    target.getPrev().setNext(node);
-                    target.setPrev(node);
-                }
-            }
-        } else {
-            Node target = last;
-            for (int i = size - 1; i >= index; i--){
-                if(i == index){
-                    node.setPrev(target.getPrev());
-                    node.setNext(target);
-                    target.getPrev().setNext(node);
-                    target.setPrev(node);
-                }
-                target = target.getPrev();
-            }
+        }else {
+            Node target = find(index);
+            node.setPrev(target.getPrev());
+            node.setNext(target);
+            target.getPrev().setNext(node);
+            target.setPrev(node);
         }
         size++;
     }
@@ -67,19 +42,8 @@ public class LinkedList implements List {
     @Override
     public Object get(int index) {
         validateIndex(index);
-        if(index < (size >> 1)){
-            Node node = first;
-            for(int i = 0; i < index; i++) {
-                node = node.getNext();
-            }
-            return node.getElement();
-        }else{
-            Node node = last;
-            for(int i = size - 1; i > index; i--) {
-                node = node.getPrev();
-            }
-            return node.getElement();
-        }
+        Node target = find(index);
+        return target.getElement();
     }
 
     @Override
@@ -99,40 +63,17 @@ public class LinkedList implements List {
             if (size == 1) {
                 first = null;
                 last = null;
-                size--;
-                return;
+            }else {
+                first = first.getNext();
+                first.setPrev(null);
             }
-            first = first.getNext();
-            first.setPrev(null);
-            size--;
-            return;
-        }
-
-        if (index == size - 1) {
+        }else if (index == size - 1) {
             last = last.getPrev();
             last.setNext(null);
-            size-- ;
-            return;
-        }
-
-        if(index < (size >> 1)){
-            Node target = first;
-            for (int i = 1; i <= index; i++) {
-                target = target.getNext();
-                if (i == index) {
-                    target.getPrev().setNext(target.getNext());
-                    target.getNext().setPrev(target.getPrev());
-                }
-            }
         }else {
-            Node target = last;
-            for (int i = size - 1; i >= index; i--) {
-                if (i == index) {
-                    target.getPrev().setNext(target.getNext());
-                    target.getNext().setPrev(target.getPrev());
-                }
-                target = target.getPrev();
-            }
+            Node target = find(index);
+            target.getPrev().setNext(target.getNext());
+            target.getNext().setPrev(target.getPrev());
         }
         size--;
     }
@@ -140,40 +81,27 @@ public class LinkedList implements List {
     @Override
     public void set(int index, Object element) {
         validateIndex(index);
-
-        if(index < (size >> 1)){
-            Node node = first;
-            for (int i = 0; i <= index; i ++) {
-                node = node.getNext();
-                if (i == index){
-                    node.setElement(element);
-                }
-            }
-        }else{
-            Node node = last;
-            for (int i = size - 1; i >= index; i--) {
-                if (i == index){
-                    node.setElement(element);
-                }
-                node = node.getPrev();
-            }
-        }
+        Node target = find(index);
+        target.setElement(element);
     }
 
     @Override
     public int indexOf(Object element) {
+        Node target = first;
         for(int i = 0; i < size; i++){
-            if(element.equals(get(i))){
+            if(element.equals(target.getElement())){
                 return i;
             }
+            target = target.getNext();
         }
         return -1;
     }
 
     @Override
     public int lastIndexOf(Object element) {
+        Node target = last;
         for(int i = size - 1; i >= 0; i--){
-            if(element.equals(get(i))){
+            if(element.equals(target.getElement())){
                 return i;
             }
         }
@@ -182,12 +110,12 @@ public class LinkedList implements List {
 
     @Override
     public void clear() {
-        for (Node node = first; node != null; ) {
-            Node next = node.getNext();
-            node.setPrev(null);
-            node.setNext(null);
-            node.setElement(null);
-            node = next;
+        for (Node target = first; target != null; ) {
+            Node next = target.getNext();
+            target.setPrev(null);
+            target.setNext(null);
+            target.setElement(null);
+            target = next;
         }
         first = last = null;
         size = 0;
@@ -195,9 +123,11 @@ public class LinkedList implements List {
 
     public String toString(){
         StringBuilder str = new StringBuilder("");
+        Node target = first;
+
         for (int i = 0; i < size; i++){
-            str.append(first.getElement());
-            first = first.getNext();
+            str.append(target.getElement());
+            target = target.getNext();
             if(i < size - 1){
                 str.append(", ");
             }
@@ -215,4 +145,23 @@ public class LinkedList implements List {
             System.out.println("Index " + index + " should be between 0 and " + (size));
         }
     }
+
+    private Node find(int index){
+        Node target;
+        if (index < (size / 2)){
+            target = first;
+            for (int i = 1; i <= index; i++){
+                target = target.getNext();
+            }
+        }else {
+            target = last;
+            for (int i = size - 1; i > index; i--){
+                target = target.getPrev();
+            }
+        }
+
+        return target;
+    }
+
+
 }
